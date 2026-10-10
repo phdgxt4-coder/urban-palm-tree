@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مكتبة الكويزات</title>
+<style>
+:root{
+  --bg:#09090d; --bg2:#0d0d13; --card:#15151d; --card2:#1b1b25; --card3:#202030;
+  --accent:#8b7cf6; --accent2:#c084fc; --accentDim:#6d5fd8;
+  --good:#2dd675; --good-bg:rgba(45,214,117,.12); --bad:#fb4570; --bad-bg:rgba(251,69,112,.12);
+  --text:#f2f1f8; --muted:#8b899f; --border:#232230; --border2:#2d2c3c;
+  --shadow:0 4px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;font-family:-apple-system,'Segoe UI',Tahoma,Arial,sans-serif;
+  background:radial-gradient(circle at 20% 0%, #121018 0%, var(--bg) 55%);
+  color:var(--text);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  -webkit-font-smoothing:antialiased;letter-spacing:.1px;
+}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 56px;min-height:100%;}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.backbtn{background:var(--card);border:1px solid var(--border2);border-radius:11px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;color:var(--accent);flex-shrink:0;transition:.15s;}
+.backbtn:active{transform:scale(.93);}
+.topbar h1{font-size:1.2rem;margin:0;flex:1;font-weight:800;letter-spacing:.2px;}
+.subtitle{color:var(--muted);font-size:.86rem;margin:-12px 0 20px;}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.tile{background:linear-gradient(165deg,var(--card3),var(--card));border:1px solid var(--border2);border-radius:20px;padding:24px 14px;text-align:center;cursor:pointer;transition:.15s;box-shadow:var(--shadow);}
+.tile:active{transform:scale(.96);}
+.tile .emoji{font-size:2.1rem;display:block;margin-bottom:10px;filter:drop-shadow(0 2px 6px rgba(139,124,246,.35));}
+.tile .lbl{font-weight:700;font-size:1.02rem;}
+.tile .cnt{color:var(--muted);font-size:.78rem;margin-top:4px;}
+
+.qlist-item{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:15px 17px;margin-bottom:11px;display:flex;align-items:center;gap:13px;cursor:pointer;box-shadow:var(--shadow);}
+.qlist-item .ico{font-size:1.5rem;}
+.qlist-item .info{flex:1;}
+.qlist-item .info .t{font-weight:700;}
+.qlist-item .info .m{color:var(--muted);font-size:.78rem;margin-top:3px;}
+.qlist-item .del{color:var(--bad);font-size:1.05rem;padding:7px;background:none;border:none;cursor:pointer;opacity:.75;}
+.qlist-item .del:active{opacity:1;}
+.addbtn{width:100%;padding:15px;border:1.5px dashed var(--border2);background:var(--bg2);color:var(--accent);border-radius:16px;font-size:.98rem;font-weight:700;cursor:pointer;margin-top:8px;transition:.15s;}
+.addbtn:active{transform:scale(.98);background:var(--card2);}
+.empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:.92rem;}
+
+.examtimer{position:sticky;top:0;z-index:6;background:var(--card3);border:1px solid var(--border2);border-radius:12px;padding:8px 14px;text-align:center;font-weight:800;font-size:1rem;color:var(--accent2);margin-bottom:10px;direction:ltr;box-shadow:var(--shadow);}
+.progress-wrap{position:sticky;top:0;background:var(--bg);padding:8px 0 16px;z-index:5;}
+.progress-bar{height:7px;background:var(--card2);border-radius:5px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .3s;box-shadow:0 0 10px rgba(139,124,246,.5);}
+.progress-txt{text-align:center;font-size:.78rem;color:var(--muted);margin-top:7px;font-weight:600;}
+.qcard{background:linear-gradient(165deg,var(--card3),var(--card));border:1px solid var(--border2);border-radius:22px;padding:28px 22px;min-height:260px;opacity:1;transform:translateY(0);transition:opacity .22s ease, transform .22s ease;box-shadow:var(--shadow);}
+.qcard.fade{opacity:0;transform:translateY(10px);}
+.qtype{display:inline-block;background:rgba(139,124,246,.14);color:var(--accent);font-size:.72rem;font-weight:800;padding:4px 12px;border-radius:20px;margin-bottom:16px;letter-spacing:.3px;}
+.qtext{font-size:1.14rem;line-height:1.7;margin-bottom:20px;direction:ltr;text-align:left;font-weight:700;}
+.options{display:grid;gap:10px;}
+.opt{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border2);border-radius:13px;padding:14px 15px;cursor:pointer;direction:ltr;text-align:left;transition:.15s;background:var(--bg2);font-size:.98rem;}
+.opt:active{transform:scale(.985);}
+.opt.picked{border-color:var(--accent);background:rgba(139,124,246,.1);}
+.opt.correct{border-color:var(--good);background:var(--good-bg);font-weight:700;}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg);}
+.opt.locked{cursor:default;}
+textarea.ans{width:100%;min-height:72px;border-radius:13px;border:1.5px solid var(--border2);background:var(--bg2);color:var(--text);padding:13px 15px;font-size:1rem;direction:ltr;text-align:left;resize:vertical;font-family:inherit;}
+textarea.ans:focus{outline:none;border-color:var(--accent);}
+textarea.ans:disabled{opacity:.85;}
+.navrow{display:flex;gap:10px;margin-top:22px;}
+.btn{flex:1;padding:16px;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;transition:.15s;}
+.btn.primary{background:linear-gradient(90deg,var(--accentDim),var(--accent2));color:#fff;box-shadow:0 6px 18px rgba(139,124,246,.3);}
+.btn.primary:active{transform:scale(.98);}
+.btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--border2);flex:0 0 70px;}
+.btn:disabled{opacity:.35;box-shadow:none;}
+.checkbtn{width:100%;padding:14px;border:none;border-radius:13px;background:var(--bg2);color:var(--accent);border:1.5px solid var(--accent);font-weight:800;font-size:.95rem;cursor:pointer;margin-top:16px;transition:.15s;}
+.checkbtn:active{transform:scale(.98);}
+.feedback{margin-top:16px;padding:14px 16px;border-radius:14px;font-size:.92rem;direction:ltr;text-align:left;line-height:1.55;}
+.feedback.ok{background:var(--good-bg);color:var(--good);border:1px solid rgba(45,214,117,.3);}
+.feedback.no{background:var(--bad-bg);color:var(--bad);border:1px solid rgba(251,69,112,.3);}
+.feedback b{color:var(--text);}
+
+.scorebox{text-align:center;background:linear-gradient(165deg,var(--card3),var(--card));border:1px solid var(--border2);border-radius:22px;padding:34px 16px;margin-bottom:20px;box-shadow:var(--shadow);}
+.scorebox .big{font-size:3rem;font-weight:900;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.scorebox .sub{color:var(--muted);margin-top:8px;font-weight:600;}
+.review{background:var(--card);border:1px solid var(--border2);border-radius:15px;padding:15px 17px;margin-bottom:11px;box-shadow:var(--shadow);}
+.review.ok{border-right:4px solid var(--good);}
+.review.no{border-right:4px solid var(--bad);}
+.review .rq{direction:ltr;text-align:left;font-weight:700;margin-bottom:7px;}
+.review .ra{direction:ltr;text-align:left;font-size:.88rem;color:var(--muted);}
+.review .ra b{color:var(--text);}
+
+.field{margin-bottom:15px;}
+.field label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:7px;font-weight:600;}
+.field input[type=text], .field textarea, .field select{
+  width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border2);background:var(--bg2);color:var(--text);font-size:.95rem;font-family:inherit;
+}
+.field input:focus{outline:none;border-color:var(--accent);}
+.qdraft{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:16px;margin-bottom:13px;box-shadow:var(--shadow);}
+.qdraft .rowtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;}
+.qdraft .rowtop b{font-size:.85rem;color:var(--accent);}
+.qdraft .rm{background:none;border:none;color:var(--bad);cursor:pointer;font-size:.9rem;}
+.optrow{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.optrow input[type=radio]{accent-color:var(--accent);}
+.optrow input[type=text]{flex:1;}
+
+details.resbox{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:4px 17px;margin:18px 0 10px;box-shadow:var(--shadow);}
+details.resbox summary{padding:14px 0;font-weight:700;cursor:pointer;list-style:none;}
+details.resbox summary::-webkit-details-marker{display:none;}
+.resitem{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border);font-size:.9rem;}
+.resitem span{flex:1;color:var(--text);}
+.resitem a{flex:1;color:var(--text);text-decoration:none;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.resitem a .openico{color:var(--accent);font-weight:800;font-size:.8rem;white-space:nowrap;}
+.resitem a:active{opacity:.8;}
+.resadd{display:flex;gap:8px;padding:13px 0 15px;border-top:1px solid var(--border);margin-top:5px;}
+.resadd input{flex:1;padding:11px 13px;border-radius:11px;border:1.5px solid var(--border2);background:var(--bg2);color:var(--text);}
+.resadd input:focus{outline:none;border-color:var(--accent);}
+.resadd button{padding:11px 16px;border:none;border-radius:11px;background:linear-gradient(90deg,var(--accentDim),var(--accent2));color:#fff;font-weight:800;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const SUBJECTS = [
+  {id:'arabic',label:'عربي',emoji:'📖'},
+  {id:'english',label:'انجليزي',emoji:'🇬🇧'},
+  {id:'science',label:'علوم',emoji:'🔬'},
+  {id:'history',label:'تاريخ',emoji:'🏛️'},
+  {id:'philosophy',label:'فلسفة',emoji:'🧠'},
+  {id:'math',label:'رياضيات',emoji:'➗'},
+];
+
+const DEFAULT_RESOURCES = {
+  arabic: ['امتحان لغة عربية - 1 ثانوي ترم 1 (ذاكرولي)'],
+  english: ['معاصر لغة انجليزية - 1 ثانوي ترم 1 (ذاكرولي)'],
+  science: ['امتحان علوم متكاملة - 1 ثانوي ترم 1 (ذاكرولي)'],
+  history: ['امتحان تاريخ - 1 ثانوي ترم 1 (ذاكرولي)'],
+  philosophy: ['امتحان فلسفة - 1 ثانوي ترم 1 (ذاكرولي)'],
+  math: ['معاصر رياضيات - 1 ثانوي ترم 1 (ذاكرولي)'],
+};
+
+function buildSeedQuiz(){
+  const mcq = [
+  ["We ___ eat so much fat as that's unhealthy.",["have to","must","should","shouldn't"],3],
+  ["You ___ stay up too late at night.",["shouldn't","should","have","must"],0],
+  ["You ___ take photographs here. It's against the law.",["mustn't","can","have to","might not"],0],
+  ["You ___ do your homework regularly.",["can't","should","mustn't","need"],1],
+  ["Mariam ___ get up early to catch the train.",["have to","must","need","shouldn't"],1],
+  ["You ___ drink the water from the pond. It's polluted.",["mustn't","can","need to","haven't"],0],
+  ["Asmaa ___ go to bed early to get up early.",["have to","should","can't","need"],1],
+  ["It is advisable to do exercise. You ___ follow a diet.",["shouldn't","should","mustn't","don't have"],1],
+  ["A: Do you think I can cycle on the pavement? B: No, you ___.",["must","mustn't","should","aren't"],1],
+  ["Haven't they given you the money back yet? They ___ that last week.",["should have done","shouldn't have done","should do","shouldn't do"],0],
+  ["You ___ the second project before you finished the first one completely.",["shouldn't start","should start","should have started","shouldn't have started"],3],
+  ["A: I'm really tired. B: You ___ to bed earlier last night.",["should go","shouldn't go","should have gone","shouldn't have gone"],2],
+  ["A: I'm often tired during the day. B: You ___ to bed earlier.",["should go","shouldn't go","should have gone","shouldn't have gone"],0],
+  ["It would be ___ to go on smoking.",["advisable","better","sensible","insensible"],3],
+  ["My advice to you ___ friends with those bad people.",["is to make","is not to make","is to be made","is not to be made"],1],
+  ["I'm your boss. You ___ leave without my permission.",["have to","mustn't","shouldn't","must"],1],
+  ["I really must buy my friend a mat and a rosary from Mecca. This shows ___.",["inner feeling","external obligation","strong advice","regret"],0],
+  ["Which of the following sentences is structurally correct?",["You must to study if you want to succeed.","You must study if you want to succeed.","You must be study if you want to succeed.","You must studying if you want succeed."],1],
+  ["When driving, you must always stop at the red light. It is a/an ___.",["law","invitation","advice","suggestion"],0],
+  ['"I have to wear my uniform to work." What does this sentence refer to?',["This is a personal obligation","This is a personal necessity","I have no choice","It is up to me"],2]
+  ];
+  const rewrite = [
+  ["It isn't a good idea to get up late. (shouldn't)",["you shouldn't get up late"]],
+  ["It is necessary to wear a seatbelt while driving. (must)",["you must wear a seatbelt while driving"]],
+  ["It isn't allowed to park here. (mustn't)",["you mustn't park here","we mustn't park here","one mustn't park here"]],
+  ["It isn't permitted to share your password with anyone. (mustn't)",["you mustn't share your password with anyone"]],
+  ["He isn't required to pay now. (doesn't have)",["he doesn't have to pay now"]]
+  ];
+  const corr = [
+  ["You must to wear a uniform at school. (find and correct the mistake)",["you must wear a uniform at school"]],
+  ["She should calling her mother more often. (find and correct the mistake)",["she should call her mother more often"]],
+  ["She don't have to worry. Everything is fine. (find and correct the mistake)",["she doesn't have to worry. everything is fine","she doesn't have to worry everything is fine"]],
+  ["He mustn't attend the party. He promised to go. (find and correct the mistake)",["he must attend the party. he promised to go","he has to attend the party. he promised to go"]],
+  ['Ali must park his car here. There is a "No Parking" sign. (find and correct the mistake)',["ali mustn't park his car here. there is a \"no parking\" sign","ali mustn't park his car here there is a no parking sign"]]
+  ];
+  const qs = [];
+  mcq.forEach(q=>qs.push({type:'mcq',text:q[0],options:q[1],correct:q[2]}));
+  rewrite.forEach(q=>qs.push({type:'text',text:q[0],accepted:q[1]}));
+  corr.forEach(q=>qs.push({type:'text',text:q[0],accepted:q[1]}));
+  return {id:'seed-u2-english',subject:'english',title:'اليونت الثاني - Modal Verbs',questions:qs};
+}
+
+function buildFullExamQuiz(){
+  const mcq = [
+  ["I ___ tidy my room or my mother will be angry.",["has to","must","can't","shouldn't"],1],
+  ["I can give you a lift to the airport. You ___ to take a taxi.",["needn't","don't need","must","have"],1],
+  ["You ___ turn this music down before your dad gets angry.",["need","ought","had better","must to"],2],
+  ["You ___ allowed to drive at more than 110 kph on the motorway.",["aren't","don't","haven't","hadn't"],0],
+  ["Emad cut his leg and ___ go to hospital for treatment.",["should","needs to","had to","has to"],2],
+  ["There is a \"No Smoking\" sign. We ___ smoke here.",["shouldn't","should","mustn't","must"],2],
+  ["You ___ do the shopping now. I'll do it later.",["needn't","mustn't","must","have to"],0],
+  ["Vegetables should ___ before you cook them.",["wash","be washed","to wash","washing"],1],
+  ["Your mother must ___ with the housework. She looks tired.",["help","be helped","to help","helping"],1],
+  ["You ___ lies, son!",["shouldn't telling","mustn't tell","should tell","must tell"],1],
+  ["If you are still in Egypt, you ___ attend my wedding. You are my closest friend.",["ought","must","shouldn't","mustn't"],1],
+  ["I'm taking an early train tomorrow. I ___ drink too much coffee or I won't sleep early.",["should","must","mustn't","need to"],2],
+  ["I've already watered the plants; you ___ to do it again.",["needn't","shouldn't","don't need","mustn't"],2],
+  ["Nada has got a message from her family. She ___ reply soon or they'll start to worry.",["mustn't","doesn't have to","needs to","had to"],2],
+  ["You ___ to smoke while you are using any kind of public transport.",["allowed","didn't allow","aren't allowed","hadn't allowed"],2],
+  ["They ___ eat that bread. It's green and has a bad smell.",["should","aren't","must","mustn't"],3],
+  ["Sayed ___ his friend yesterday. Now, it is too late.",["should call","shouldn't have called","should have called","shouldn't call"],2],
+  ["He ___ at the little girl. She was so scared.",["should shout","should have shouted","shouldn't have shouted","ought to have shouted"],2],
+  ["It's a/an ___ to study hard to get high marks.",["advice","necessary","must","should"],2],
+  ["We ___ run to the museum because it was already closed when we got there.",["needn't have","didn't have to","don't have to","don't need to"],0]
+  ];
+  const rewrite = [
+  ["You mustn't use mobile phones during the final examination. (You are banned)",["you are banned from using mobile phones during the final examination"]],
+  ["It's not allowed to cheat in exams. (mustn't)",["you mustn't cheat in exams","one mustn't cheat in exams"]],
+  ["It's a good idea to study regularly for better results. (should)",["you should study regularly for better results"]],
+  ["Drivers are required to stop at a red light. (must)",["drivers must stop at a red light"]],
+  ["It is necessary to show your ID at the airport. (must)",["you must show your id at the airport"]],
+  ["It's advisable for students to revise their lessons every weekend. (should)",["students should revise their lessons every weekend"]],
+  ["It is your duty to hand in the project before the deadline. (must)",["you must hand in the project before the deadline"]],
+  ["It isn't necessary for Yara to clean her room. (doesn't have)",["yara doesn't have to clean her room"]],
+  ["It is essential to wear a helmet when riding a motorbike. (must)",["you must wear a helmet when riding a motorbike"]],
+  ["It is important to pay the fees before the deadline. (have to)",["you have to pay the fees before the deadline"]]
+  ];
+  const corr = [
+  ["You must to wear a uniform at school.",["you must wear a uniform at school"]],
+  ["She should calling her mother more often.",["she should call her mother more often"]],
+  ["She don't have to worry. Everything is fine.",["she doesn't have to worry. everything is fine","she doesn't have to worry everything is fine"]],
+  ["He mustn't attend the party. He promised to go.",["he must attend the party. he promised to go","he has to attend the party. he promised to go"]],
+  ['Ali must park his car here. There is a "No Parking" sign.',["ali mustn't park his car here. there is a \"no parking\" sign","ali mustn't park his car here there is a no parking sign"]],
+  ["You mustn't to drive without a licence.",["you mustn't drive without a licence"]],
+  ["She have to finish her homework before dinner.",["she has to finish her homework before dinner"]],
+  ["We should to wear a seatbelt in the car.",["we should wear a seatbelt in the car"]],
+  ["He don't need to come early tomorrow.",["he doesn't need to come early tomorrow"]],
+  ['They mustn\'t park here. There is a "Parking Allowed" sign.',["they can park here. there is a \"parking allowed\" sign","they may park here. there is a \"parking allowed\" sign"]]
+  ];
+  const translateAE = [
+  ["ترجم إلى الإنجليزية: يجب عليك أن تحترم قوانين المدرسة.",["you must respect the school rules","you have to respect the school's rules"]],
+  ["ترجم إلى الإنجليزية: ممنوع التدخين هنا.",["you mustn't smoke here","smoking isn't allowed here"]],
+  ["ترجم إلى الإنجليزية: ليس من الضروري أن تأتي مبكرًا.",["you don't have to come early","it isn't necessary for you to come early"]],
+  ["ترجم إلى الإنجليزية: كان يجب أن تذاكر أكثر قبل الامتحان.",["you should have studied more before the exam"]],
+  ["ترجم إلى الإنجليزية: يُنصح الطلاب بمراجعة دروسهم كل أسبوع.",["students should revise their lessons every week","students are advised to revise their lessons every week"]]
+  ];
+  const translateEA = [
+  ["ترجم إلى العربية: You mustn't park here. It's against the law.",["يمنع عليك أن توقف سيارتك هنا. هذا مخالف للقانون","ممنوع الوقوف هنا. هذا ضد القانون"]],
+  ["ترجم إلى العربية: She doesn't have to wear a uniform at this school.",["هي ليست مضطرة لارتداء زي مدرسي في هذه المدرسة"]],
+  ["ترجم إلى العربية: You should have called me before you came.",["كان يجب أن تتصل بي قبل أن تأتي"]],
+  ["ترجم إلى العربية: Drivers must stop at a red light.",["يجب على السائقين التوقف عند الإشارة الحمراء"]],
+  ["ترجم إلى العربية: It is necessary for all students to bring their ID cards.",["من الضروري أن يحضر جميع الطلاب بطاقاتهم الشخصية"]]
+  ];
+  const qs = [];
+  mcq.forEach(q=>qs.push({type:'mcq',text:q[0],options:q[1],correct:q[2]}));
+  rewrite.forEach(q=>qs.push({type:'text',label:'أعد الكتابة (Rewrite)',text:q[0],accepted:q[1]}));
+  corr.forEach(q=>qs.push({type:'text',label:'صحّح الخطأ (Correct the mistake)',text:q[0]+' (find and correct the mistake)',accepted:q[1]}));
+  translateAE.concat(translateEA).forEach(q=>qs.push({type:'text',label:'ترجم (Translate)',text:q[0],accepted:q[1]}));
+  return {id:'seed-u2-full-exam',subject:'english',title:'📝 امتحان شامل - اليونت الثاني كامل (50 سؤال)',questions:qs,durationMinutes:60};
+}
+
+const ENSURE_RESOURCES = {
+  english: ['معاصر لغة انجليزية - 1 ثانوي ترم 1 (ذاكرولي) - نسخة إضافية']
+};
+
+function loadData(){
+  let data;
+  try{
+    const raw = localStorage.getItem('quizhub_v2');
+    if(raw) data = JSON.parse(raw);
+  }catch(e){}
+  if(!data) data = {quizzes:[], resources: JSON.parse(JSON.stringify(DEFAULT_RESOURCES))};
+  if(!data.resources) data.resources = JSON.parse(JSON.stringify(DEFAULT_RESOURCES));
+  // make sure the English Unit 2 quiz always exists (re-adds it if it was deleted)
+  if(!data.quizzes.some(q=>q.id==='seed-u2-english')){
+    data.quizzes.unshift(buildSeedQuiz());
+  }
+  if(!data.quizzes.some(q=>q.id==='seed-u2-full-exam')){
+    data.quizzes.unshift(buildFullExamQuiz());
+  }
+  // migrate old plain-string resources to {title,url} objects
+  Object.keys(data.resources).forEach(subj=>{
+    data.resources[subj] = data.resources[subj].map(r=> typeof r==='string' ? {title:r, url:null} : r);
+  });
+  // make sure newly-sent reference books always appear in the resources list
+  Object.keys(ENSURE_RESOURCES).forEach(subj=>{
+    if(!data.resources[subj]) data.resources[subj] = [];
+    ENSURE_RESOURCES[subj].forEach(title=>{
+      if(!data.resources[subj].some(r=>r.title===title)) data.resources[subj].push({title, url:null});
+    });
+  });
+  saveData(data);
+  return data;
+}
+function saveData(data){
+  try{ localStorage.setItem('quizhub_v2', JSON.stringify(data)); }catch(e){}
+}
+
+let DATA;
+let state = {view:'home'};
+const app = document.getElementById('app');
+
+function showBootError(err){
+  app.innerHTML = `
+    <div style="text-align:center;padding:60px 20px;">
+      <div style="font-size:2.4rem;margin-bottom:10px;">😕</div>
+      <h2 style="margin:0 0 10px;">حصلت مشكلة في فتح الموقع</h2>
+      <p style="color:var(--muted);font-size:.9rem;margin-bottom:22px;">ممكن تكون البيانات المحفوظة اتعطبت. دوس على الزرار ده يمسح البيانات المحفوظة ويبدأ الموقع من جديد (الكويزات الجاهزة هترجع تلقائي).</p>
+      <button class="btn primary" style="padding:16px 26px;" onclick="localStorage.removeItem('quizhub_v2');location.reload();">🔄 امسح البيانات وابدأ من جديد</button>
+    </div>`;
+  console.error('QuizHub boot error:', err);
+}
+
+function nav(v, extra){
+  state = Object.assign({view:v}, extra||{});
+  render();
+  window.scrollTo(0,0);
+  if(v==='player') startTimerIfNeeded();
+  try{ history.pushState({view:v, subject:extra&&extra.subject, quizId:extra&&extra.quiz&&extra.quiz.id, idx:extra&&extra.idx, answers:extra&&extra.answers, examEndTime:extra&&extra.examEndTime}, '', '#'+v); }catch(e){}
+}
+
+window.addEventListener('popstate', (e)=>{
+  clearInterval(timerInterval);
+  const s = e.state;
+  if(!s || s.view==='home'){ state = {view:'home'}; render(); return; }
+  if(s.view==='subject'){ state = {view:'subject', subject:s.subject}; render(); return; }
+  if(s.view==='builder'){ state = {view:'subject', subject:s.subject}; render(); return; }
+  if(s.view==='player' && s.quizId){
+    const quiz = DATA.quizzes.find(q=>q.id===s.quizId);
+    if(!quiz){ state={view:'home'}; render(); return; }
+    state = {view:'player', quiz, idx:s.idx||0, answers:s.answers||new Array(quiz.questions.length).fill(null), examEndTime:s.examEndTime||null};
+    render();
+    startTimerIfNeeded();
+    return;
+  }
+  state = {view:'home'}; render();
+});
+
+function render(){
+  if(state.view==='home') return renderHome();
+  if(state.view==='subject') return renderSubject();
+  if(state.view==='builder') return renderBuilder();
+  if(state.view==='player') return renderPlayer();
+  if(state.view==='result') return renderResult();
+  if(state.view==='linkgen') return renderLinkGen();
+  if(state.view==='studentIntro') return renderStudentIntro();
+}
+
+function topbar(title, back){
+  return `<div class="topbar">${back?`<button class="backbtn" onclick="${back}">→</button>`:''}<h1>${title}</h1></div>`;
+}
+
+function renderHome(){
+  let g = SUBJECTS.map(s=>{
+    const n = DATA.quizzes.filter(q=>q.subject===s.id).length;
+    return `<div class="tile" onclick="nav('subject',{subject:'${s.id}'})">
+      <span class="emoji">${s.emoji}</span>
+      <div class="lbl">${s.label}</div>
+      <div class="cnt">${n} كويز</div>
+    </div>`;
+  }).join('');
+  app.innerHTML = `
+    ${topbar('📚 مكتبة الكويزات')}
+    <div class="subtitle">اختار المادة وابدأ المذاكرة</div>
+    <div class="grid">${g}</div>
+  `;
+}
+
+function renderSubject(){
+  const s = SUBJECTS.find(x=>x.id===state.subject);
+  const list = DATA.quizzes.filter(q=>q.subject===state.subject);
+  let items = list.length ? list.map(q=>`
+    <div class="qlist-item">
+      <span class="ico">${s.emoji}</span>
+      <div class="info" onclick="startQuiz('${q.id}')">
+        <div class="t">${q.title}</div>
+        <div class="m">${q.questions.length} سؤال</div>
+      </div>
+      <button class="del" style="color:var(--accent);" onclick="event.stopPropagation();openLinkGen('${q.id}')" title="ولّد رابط لطالب">🔗</button>
+      <button class="del" onclick="event.stopPropagation();delQuiz('${q.id}')">🗑️</button>
+    </div>
+  `).join('') : `<div class="empty">مفيش كويزات هنا لسه<br>دوس تحت تضيف أول كويز 👇</div>`;
+
+  const res = DATA.resources[state.subject] || [];
+  let resHtml = `<details class="resbox">
+    <summary>📚 المصادر والمراجع (${res.length})</summary>
+    ${res.map(r=> r.url
+        ? `<div class="resitem"><a href="${r.url}" target="_blank" rel="noopener">📘 ${r.title} <span class="openico">↗ فتح</span></a></div>`
+        : `<div class="resitem"><span>📘 ${r.title}</span></div>`
+      ).join('') || '<div class="empty" style="padding:8px 0;">مفيش مصادر لسه</div>'}
+    <div class="resadd" style="flex-direction:column;align-items:stretch;">
+      <input type="text" id="resInput" placeholder="اسم الكتاب أو المصدر" style="margin-bottom:8px;">
+      <input type="text" id="resUrlInput" placeholder="رابط جوجل درايف (اختياري - عشان يفتح من الموقع)" style="margin-bottom:8px;">
+      <button onclick="addResource()">＋ أضف المصدر</button>
+    </div>
+  </details>`;
+
+  app.innerHTML = `
+    ${topbar(s.emoji+' '+s.label, "nav('home')")}
+    ${items}
+    <button class="addbtn" onclick="nav('builder',{subject:'${s.id}'})">＋ أضف كويز جديد</button>
+    ${resHtml}
+  `;
+}
+
+function addResource(){
+  const inp = document.getElementById('resInput');
+  const urlInp = document.getElementById('resUrlInput');
+  const v = inp.value.trim();
+  const u = urlInp.value.trim();
+  if(!v) return;
+  if(!DATA.resources[state.subject]) DATA.resources[state.subject] = [];
+  DATA.resources[state.subject].push({title:v, url:u||null});
+  saveData(DATA);
+  renderSubject();
+}
+
+function startQuiz(id){
+  const quiz = DATA.quizzes.find(q=>q.id===id);
+  const saved = DATA.progress && DATA.progress[id];
+  let idx = 0, answers = new Array(quiz.questions.length).fill(null), examEndTime = null;
+  if(quiz.durationMinutes) examEndTime = Date.now() + quiz.durationMinutes*60000;
+
+  if(saved){
+    const resume = confirm('عندك محاولة سابقة محفوظة لنفس الامتحان.\n"موافق" = استكمل منها.\n"إلغاء" = ابدأ من جديد (هتتمسح المحاولة القديمة).');
+    if(resume){
+      idx = saved.idx || 0;
+      answers = saved.answers || answers;
+      if(saved.examEndTime){
+        examEndTime = saved.examEndTime;
+        if(examEndTime <= Date.now()){
+          nav('player',{quiz, idx, answers, examEndTime});
+          finishQuiz();
+          return;
+        }
+      }
+    } else {
+      delete DATA.progress[id];
+      saveData(DATA);
+    }
+  }
+  nav('player',{quiz, idx, answers, examEndTime});
+}
+
+function saveProgress(){
+  if(!state.quiz) return;
+  if(!DATA.progress) DATA.progress = {};
+  DATA.progress[state.quiz.id] = {idx: state.idx, answers: state.answers, examEndTime: state.examEndTime || null};
+  saveData(DATA);
+}
+
+function delQuiz(id){
+  if(!confirm('تمسح الكويز ده؟')) return;
+  DATA.quizzes = DATA.quizzes.filter(q=>q.id!==id);
+  saveData(DATA);
+  render();
+}
+
+/* ---------- PLAYER ---------- */
+function norm(s){
+  return (s||'').toLowerCase().trim().replace(/[.,!?"'،]/g,'').replace(/\s+/g,' ');
+}
+
+function renderPlayer(){
+  const {quiz, idx, answers, examEndTime} = state;
+  const q = quiz.questions[idx];
+  const pct = Math.round((idx/quiz.questions.length)*100);
+
+  let body = '';
+  if(q.type==='mcq'){
+    body = `<div class="options">${q.options.map((o,j)=>{
+      const cls = answers[idx]===j ? 'opt picked' : 'opt';
+      return `<label class="${cls}" onclick="pickMcq(${j})">
+        <span>${String.fromCharCode(97+j)}. ${o}</span>
+      </label>`;
+    }).join('')}</div>`;
+  } else {
+    body = `<textarea class="ans" id="curtext" placeholder="اكتب إجابتك هنا..." oninput="captureTextIfAny();saveProgress();">${answers[idx]||''}</textarea>`;
+  }
+
+  const isLast = idx===quiz.questions.length-1;
+  app.innerHTML = `
+    ${topbar(quiz.title, state.studentMode ? null : "exitPlayer()")}
+    ${examEndTime ? `<div class="examtimer" id="examTimer">⏱ --:--</div>` : ''}
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-txt">سؤال ${idx+1} من ${quiz.questions.length} — التصحيح هيظهر في الآخر</div>
+    </div>
+    <div class="qcard" id="qcard">
+      <span class="qtype">${q.label || (q.type==='mcq'?'اختر الإجابة':'اكتب الإجابة')}</span>
+      <div class="qtext">${q.text.replace(/___/,'<u>.........</u>')}</div>
+      ${body}
+    </div>
+    <div class="navrow">
+      ${idx>0?`<button class="btn ghost" onclick="stepQuestion(-1)">◀</button>`:''}
+      <button class="btn primary" onclick="${isLast?'finishQuiz()':'stepQuestion(1)'}">${isLast?'إنهاء وعرض النتيجة ✅':'التالي ▶'}</button>
+    </div>
+  `;
+}
+
+function pickMcq(j){
+  state.answers[state.idx] = j;
+  document.querySelectorAll('.opt').forEach((el,i)=>el.classList.toggle('picked', i===j));
+  saveProgress();
+}
+
+function captureTextIfAny(){
+  const ta = document.getElementById('curtext');
+  if(ta) state.answers[state.idx] = ta.value;
+}
+
+function stepQuestion(dir){
+  captureTextIfAny();
+  saveProgress();
+  const card = document.getElementById('qcard');
+  if(card) card.classList.add('fade');
+  setTimeout(()=>{
+    state.idx += dir;
+    renderPlayer();
+  }, 180);
+}
+
+function exitPlayer(){
+  captureTextIfAny();
+  saveProgress();
+  clearInterval(timerInterval);
+  nav('subject',{subject:state.quiz.subject});
+}
+
+/* ---------- EXAM TIMER ---------- */
+let timerInterval = null;
+function formatTime(ms){
+  const total = Math.max(0, Math.floor(ms/1000));
+  const m = Math.floor(total/60).toString().padStart(2,'0');
+  const s = (total%60).toString().padStart(2,'0');
+  return m+':'+s;
+}
+function startTimerIfNeeded(){
+  clearInterval(timerInterval);
+  if(state.view!=='player' || !state.examEndTime) return;
+  const tick = ()=>{
+    const el = document.getElementById('examTimer');
+    const remain = state.examEndTime - Date.now();
+    if(remain<=0){
+      clearInterval(timerInterval);
+      if(el) el.textContent = '⏱ 00:00';
+      alert('⏰ خلصت مدة الامتحان (ساعة). هنصحح اللي جاوبته لحد دلوقتي.');
+      finishQuiz();
+      return;
+    }
+    if(el) el.textContent = '⏱ '+formatTime(remain);
+  };
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+function finishQuiz(){
+  captureTextIfAny();
+  clearInterval(timerInterval);
+  if(DATA.progress && state.quiz) delete DATA.progress[state.quiz.id];
+  saveData(DATA);
+  const {quiz, answers} = state;
+  let score = 0;
+  const review = quiz.questions.map((q,i)=>{
+    let ok, yourAns, correctAns;
+    if(q.type==='mcq'){
+      ok = answers[i]===q.correct;
+      yourAns = answers[i]!=null ? String.fromCharCode(97+answers[i])+'. '+q.options[answers[i]] : 'لم تُجب';
+      correctAns = String.fromCharCode(97+q.correct)+'. '+q.options[q.correct];
+    } else {
+      ok = q.accepted.some(a=>norm(a)===norm(answers[i]));
+      yourAns = answers[i] && answers[i].trim() ? answers[i] : 'لم تُجب';
+      correctAns = q.accepted[0];
+    }
+    if(ok) score++;
+    return {text:q.text, ok, yourAns, correctAns};
+  });
+  nav('result',{quiz, score, review, studentMode: state.studentMode||false, studentName: state.studentName, teacherPhone: state.teacherPhone});
+}
+
+/* ---------- RESULT ---------- */
+function renderResult(){
+  const {quiz, score, review, studentMode, teacherPhone} = state;
+  const total = quiz.questions.length;
+  const pct = Math.round(score/total*100);
+  const msg = pct>=85?'ممتاز 🌟':pct>=60?'جيد، راجع الأخطاء 💪':'محتاج مراجعة تانية 📖';
+  let rev = review.map(r=>`
+    <div class="review ${r.ok?'ok':'no'}">
+      <div class="rq">${r.text.replace(/___/,'.........')}</div>
+      <div class="ra">${r.ok?'✅ صح':'❌ إجابتك: <b>'+r.yourAns+'</b><br>الصح: <b>'+r.correctAns+'</b>'}</div>
+    </div>`).join('');
+  let sendBlock = '';
+  if(studentMode){
+    sendBlock = `<div class="qcard" style="margin-bottom:18px;">
+      <div style="font-weight:800;margin-bottom:12px;">📤 ابعت نتيجتك للمعلم</div>
+      ${teacherPhone ? `<button class="btn primary" style="width:100%;margin-bottom:10px;" onclick="sendResultWhatsApp()">💬 إرسال عبر واتساب</button>` : ''}
+      <button class="checkbtn" style="margin-top:0;" onclick="copyResultText()">📋 انسخ نتيجتك</button>
+    </div>`;
+  }
+  app.innerHTML = `
+    ${studentMode ? '' : topbar('النتيجة', `nav('subject',{subject:'${quiz.subject}'})`)}
+    <div class="scorebox">
+      <div class="big">${score} / ${total}</div>
+      <div class="sub">${msg} (${pct}%)</div>
+    </div>
+    ${sendBlock}
+    ${rev}
+    ${studentMode ? '' : `<button class="addbtn" onclick="startQuiz('${quiz.id}')">🔄 أعد الكويز</button>`}
+  `;
+}
+
+/* ---------- STUDENT LINKS (no backend: each link carries everything it needs) ---------- */
+function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
+function b64decode(str){ return decodeURIComponent(escape(atob(str))); }
+
+function openLinkGen(id){
+  const quiz = DATA.quizzes.find(q=>q.id===id);
+  if(quiz) nav('linkgen',{quiz});
+}
+
+function renderLinkGen(){
+  const quiz = state.quiz;
+  const savedPhone = DATA.teacherPhone || '';
+  app.innerHTML = `
+    ${topbar('🔗 رابط لطالب', `nav('subject',{subject:'${quiz.subject}'})`)}
+    <div class="qcard" style="margin-bottom:18px;">
+      <div style="font-weight:800;margin-bottom:4px;">${quiz.title}</div>
+      <div style="color:var(--muted);font-size:.85rem;">${quiz.questions.length} سؤال</div>
+    </div>
+    <div class="field"><label>اسم الطالب</label><input type="text" id="stuName" placeholder="مثال: أحمد محمد"></div>
+    <div class="field"><label>رقم واتساب حضرتك (اختياري — عشان الدرجة توصلك مباشرة)</label><input type="text" id="tpInput" placeholder="201012345678" value="${savedPhone}"></div>
+    <button class="btn primary" style="width:100%;" onclick="genLink()">🔗 ولّد الرابط</button>
+    <div id="linkOut"></div>
+  `;
+}
+
+function genLink(){
+  const name = document.getElementById('stuName').value.trim();
+  const tp = document.getElementById('tpInput').value.trim().replace(/[^0-9]/g,'');
+  if(!name){ alert('اكتب اسم الطالب الأول'); return; }
+  DATA.teacherPhone = tp || '';
+  saveData(DATA);
+  const quiz = state.quiz;
+  let url = location.origin + location.pathname + '?student=' + encodeURIComponent(name);
+  if(quiz.id==='seed-u2-english' || quiz.id==='seed-u2-full-exam'){
+    url += '&exam=' + encodeURIComponent(quiz.id);
+  } else {
+    url += '&examdata=' + encodeURIComponent(b64encode(JSON.stringify(quiz)));
+  }
+  if(tp) url += '&tp=' + encodeURIComponent(tp);
+  document.getElementById('linkOut').innerHTML = `
+    <div class="qcard" style="margin-top:16px;word-break:break-all;font-size:.8rem;direction:ltr;text-align:left;">${url}</div>
+    <button class="checkbtn" onclick="copyPlainText(this)" data-text="${url.replace(/"/g,'&quot;')}">📋 انسخ الرابط وابعته لـ${name}</button>
+  `;
+}
+
+function copyPlainText(btn){
+  const text = btn.getAttribute('data-text');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>alert('✅ اتنسخ! الصقه في واتساب وابعته.')).catch(()=>prompt('انسخ ده:', text));
+  } else prompt('انسخ ده:', text);
+}
+
+function renderStudentIntro(){
+  const {quiz, studentName} = state;
+  app.innerHTML = `
+    <div style="text-align:center;padding:60px 16px 20px;">
+      <div style="font-size:2.6rem;margin-bottom:14px;">👋</div>
+      <h1 style="margin:0 0 8px;font-size:1.4rem;">أهلاً ${studentName}</h1>
+      <p style="color:var(--muted);margin-bottom:26px;">إنت على وشك تبدأ:</p>
+      <div class="qcard" style="text-align:right;margin-bottom:26px;">
+        <div style="font-weight:800;font-size:1.1rem;margin-bottom:6px;">${quiz.title}</div>
+        <div style="color:var(--muted);font-size:.88rem;">${quiz.questions.length} سؤال${quiz.durationMinutes?' • مدة الامتحان '+quiz.durationMinutes+' دقيقة':''}</div>
+      </div>
+      <button class="btn primary" style="padding:17px 32px;width:100%;" onclick="startStudentExam()">ابدأ الامتحان ▶</button>
+    </div>`;
+}
+
+function startStudentExam(){
+  const {quiz, studentName, teacherPhone} = state;
+  const examEndTime = quiz.durationMinutes ? Date.now()+quiz.durationMinutes*60000 : null;
+  state = {view:'player', quiz, idx:0, answers:new Array(quiz.questions.length).fill(null), examEndTime, studentMode:true, studentName, teacherPhone};
+  render();
+  startTimerIfNeeded();
+}
+
+function resultText(){
+  const total = state.quiz.questions.length;
+  const pct = Math.round(state.score/total*100);
+  const date = new Date().toLocaleString('ar-EG');
+  return '📝 نتيجة امتحان\nالطالب: '+state.studentName+'\nالامتحان: '+state.quiz.title+'\nالدرجة: '+state.score+' / '+total+' ('+pct+'%)\nالتاريخ: '+date;
+}
+function sendResultWhatsApp(){
+  const text = encodeURIComponent(resultText());
+  window.open('https://wa.me/'+state.teacherPhone.replace(/[^0-9]/g,'')+'?text='+text, '_blank');
+}
+function copyResultText(){
+  const text = resultText();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>alert('✅ اتنسخت! الصقها وابعتها لمعلمك.')).catch(()=>prompt('انسخ ده وابعته لمعلمك:', text));
+  } else prompt('انسخ ده وابعته لمعلمك:', text);
+}
+
+/* ---------- BUILDER ---------- */
+let draft = [];
+function renderBuilder(){
+  const s = SUBJECTS.find(x=>x.id===state.subject);
+  app.innerHTML = `
+    ${topbar('إضافة كويز - '+s.label, "nav('subject',{subject:'"+state.subject+"'})")}
+    <div class="field"><label>اسم الكويز</label><input type="text" id="qzTitle" placeholder="مثال: الوحدة الأولى - القواعد"></div>
+    <div id="draftArea"></div>
+    <button class="addbtn" onclick="addDraftQ('mcq')">＋ سؤال اختيار من متعدد</button>
+    <button class="addbtn" onclick="addDraftQ('text')">＋ سؤال إجابة مكتوبة</button>
+    <div class="navrow" style="margin-top:20px;">
+      <button class="btn primary" onclick="saveQuiz()">💾 حفظ الكويز</button>
+    </div>
+  `;
+  draft = [];
+  renderDraft();
+}
+
+function addDraftQ(type){
+  draft.push(type==='mcq'?{type:'mcq',text:'',options:['','','',''],correct:0}:{type:'text',text:'',accepted:['']});
+  renderDraft();
+}
+function removeDraftQ(i){ draft.splice(i,1); renderDraft(); }
+
+function renderDraft(){
+  const area = document.getElementById('draftArea');
+  area.innerHTML = draft.map((q,i)=>{
+    if(q.type==='mcq'){
+      return `<div class="qdraft">
+        <div class="rowtop"><b>سؤال ${i+1} - اختياري</b><button class="rm" onclick="removeDraftQ(${i})">حذف ✕</button></div>
+        <div class="field"><input type="text" placeholder="نص السؤال" value="${q.text}" oninput="draft[${i}].text=this.value"></div>
+        ${q.options.map((o,j)=>`<div class="optrow">
+          <input type="radio" name="corr${i}" ${q.correct===j?'checked':''} onchange="draft[${i}].correct=${j}">
+          <input type="text" placeholder="اختيار ${String.fromCharCode(97+j)}" value="${o}" oninput="draft[${i}].options[${j}]=this.value">
+        </div>`).join('')}
+      </div>`;
+    } else {
+      return `<div class="qdraft">
+        <div class="rowtop"><b>سؤال ${i+1} - إجابة مكتوبة</b><button class="rm" onclick="removeDraftQ(${i})">حذف ✕</button></div>
+        <div class="field"><input type="text" placeholder="نص السؤال" value="${q.text}" oninput="draft[${i}].text=this.value"></div>
+        <div class="field"><label>الإجابة الصحيحة (ممكن أكتر من صيغة مفصولة بفاصلة ,)</label>
+        <input type="text" placeholder="الإجابة الصح" value="${q.accepted.join(', ')}" oninput="draft[${i}].accepted=this.value.split(',').map(x=>x.trim())"></div>
+      </div>`;
+    }
+  }).join('') || `<div class="empty">ضيف سؤال من الأزرار تحت 👇</div>`;
+}
+
+function saveQuiz(){
+  const title = document.getElementById('qzTitle').value.trim();
+  if(!title){ alert('اكتب اسم الكويز الأول'); return; }
+  if(!draft.length){ alert('ضيف سؤال واحد على الأقل'); return; }
+  for(const q of draft){
+    if(!q.text.trim()){ alert('فيه سؤال من غير نص'); return; }
+  }
+  const quiz = {id:'q'+Date.now(), subject: state.subject, title, questions: draft};
+  DATA.quizzes.push(quiz);
+  saveData(DATA);
+  nav('subject',{subject:state.subject});
+}
+
+try{
+  DATA = loadData();
+  const params = new URLSearchParams(location.search);
+  const pStudent = params.get('student');
+  const pExam = params.get('exam');
+  const pExamData = params.get('examdata');
+  const pTp = params.get('tp');
+  let bootedAsStudent = false;
+  if(pStudent && (pExam || pExamData)){
+    let quiz = null;
+    try{
+      quiz = pExamData ? JSON.parse(b64decode(pExamData)) : DATA.quizzes.find(q=>q.id===pExam);
+    }catch(e){ quiz = null; }
+    if(quiz){
+      state = {view:'studentIntro', quiz, studentName: pStudent, teacherPhone: pTp || null};
+      render();
+      bootedAsStudent = true;
+    }
+  }
+  if(!bootedAsStudent) render();
+  try{ history.replaceState({view:state.view}, '', location.hash||'#'+state.view); }catch(e){}
+}catch(err){
+  showBootError(err);
+}
+</script>
+</body>
+</html>
